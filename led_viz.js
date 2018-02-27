@@ -6,13 +6,16 @@ var http = new require('http');
 var OPC = new require('./opc')
 var client = new OPC(process.argv[2] || 'localhost', 7890);
 
-foo = 'hi'
+let locations;
 
 function draw() {
   var millis = new Date().getTime();
-
-  for (var pixel = 0; pixel < 400; pixel++) {
-    var hue = pixel * 0.1 + millis * 0.0002;
+  if (locations === undefined) {
+    return;
+  }
+  for (var pixel = 0; pixel < 200; pixel++) {
+    var temp = locations[pixel].temp;
+    let hue =((temp -65) *0.02) +0.65;
     client.setPixel(pixel, ...OPC.hsv(hue, 1, 1));
   }
   client.writePixels();
@@ -28,6 +31,7 @@ http.createServer(function(req, res) {
     body.push(chunk);
   }).on('end', () => {
     body = JSON.parse(Buffer.concat(body).toString());
+    locations = body.locations;
     console.log("BOD", body);
   });
   res.write("hi back!");
