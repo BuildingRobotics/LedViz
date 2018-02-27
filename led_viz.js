@@ -23,9 +23,11 @@ setInterval(draw, 30);
 
 http.createServer(function(req, res) {
   console.log("HEY!");
-  var body;
-  req.on('data', function (data) {
-    body = JSON.parse(data);
+  let body = [];
+  req.on('data', (chunk) => {
+    body.push(chunk);
+  }).on('end', () => {
+    body = JSON.parse(Buffer.concat(body).toString());
     console.log("BOD", body);
   });
   res.write("hi back!");
