@@ -12,9 +12,12 @@ const NUM_PIXELS = 200;
 const BLAST_MS = 2000;
 // Max width of blast animation centered on location
 const BLAST_PIXELS = 40;
+// Duration of door event
+const DOOR_MS = 5000;
 
 let locations;
 let blasts = [];
+let doorEvents = [];
 
 function draw() {
   var millis = new Date().getTime();
@@ -71,6 +74,28 @@ function draw() {
     client.setPixel(pixel, ...OPC.hsv(hue, saturation, brightness));
   }
 
+  // Draw door events if any
+  for (let i in doorEvents) {
+    const doorEvent = doorEvents[i];
+    const event_age = millis - doorEvent.when;
+    
+    if (event_age > DOOR_MS){
+      console.log("Door unlocked!", doorEvent);
+      doorEvents.splice(i,1);
+      continue;
+    }
+    var hue = 0.35;
+    let brightness = 1;
+    var isEven = Math.round(event_age/1000)%2;
+    
+    if (isEven === 0){
+      brightness = 0.6;
+    }
+    for (var pixel = 0; pixel < NUM_PIXELS; pixel++) {
+      client.setPixel(pixel, ...OPC.hsv(hue, 1, brightness));
+    }
+  }
+  
   // Draw blasts if any
   for (let i in blasts) {
     const blast = blasts[i];
@@ -104,8 +129,13 @@ http.createServer(function(req, res) {
     console.log("message:\n", body);
     if (body.type === 'update') {
       locations = body.locations;
-      console.log("locations updated");
-    } else if (body.type === 'blast') {
+      console.log("locations updated"); 
+    }
+    else if(body.type === 'doorEvent'){
+      body.when = new Date().getTime();
+      doorEvents.push(body);
+    }
+    else if (body.type === 'blast') {
       if (!locations) {
         console.log("no locations so no blast");
         return;
