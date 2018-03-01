@@ -23,6 +23,9 @@ function draw() {
   var millis = new Date().getTime();
   // Draw location temperature colors
   for (var pixel = 0; pixel < NUM_PIXELS; pixel++) {
+    /*var hue2 = pixel * 0.1 + millis * 0.0002;
+    client.setPixel(pixel, ...OPC.hsv(hue2, 1, 1));
+    continue;*/
     if (locations === undefined) {
       client.setPixel(pixel, 0, 0, 0);
       continue;
