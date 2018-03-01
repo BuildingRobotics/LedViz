@@ -21,12 +21,13 @@ let doorEvents = [];
 
 function draw() {
   var millis = new Date().getTime();
-  if (locations === undefined) {
-    return;
-  }
-
   // Draw location temperature colors
   for (var pixel = 0; pixel < NUM_PIXELS; pixel++) {
+    if (locations === undefined) {
+      client.setPixel(pixel, 0, 0, 0);
+      continue;
+    }
+
     let location = locations[pixel];
     let mode = location.mode;
     
@@ -125,8 +126,15 @@ http.createServer(function(req, res) {
   req.on('data', (chunk) => {
     body.push(chunk);
   }).on('end', () => {
-    body = JSON.parse(Buffer.concat(body).toString());
-    console.log("message:\n", body);
+    try {
+      body = Buffer.concat(body).toString();
+      body = JSON.parse(body);
+      console.log("message:\n", body);
+    } catch (e) {
+      console.log("body is not json", body, e);
+      // For now, turn any non-JSON request into a doorEvent
+      body = {type: 'doorEvent'};
+    }
     if (body.type === 'update') {
       locations = body.locations;
       console.log("locations updated"); 
