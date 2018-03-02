@@ -14,18 +14,24 @@ const BLAST_MS = 2000;
 const BLAST_PIXELS = 40;
 // Duration of door event
 const DOOR_MS = 5000;
+// Duration of rainbow animation
+const RAINBOW_MS = 5000;
 
 let locations;
 let blasts = [];
 let doorEvents = [];
+let rainbowTime = null;
 
 function draw() {
   var millis = new Date().getTime();
   // Draw location temperature colors
   for (var pixel = 0; pixel < NUM_PIXELS; pixel++) {
-    /*var hue2 = pixel * 0.1 + millis * 0.0002;
-    client.setPixel(pixel, ...OPC.hsv(hue2, 1, 1));
-    continue;*/
+    if (rainbowTime) {
+      var rainbowHue = pixel * 0.1 + millis * 0.0004;
+      client.setPixel(pixel, ...OPC.hsv(rainbowHue, 1, 1));
+      continue;
+    }
+
     if (locations === undefined) {
       client.setPixel(pixel, 0, 0, 0);
       continue;
@@ -118,6 +124,12 @@ function draw() {
         ...blast.color);
     }
   }
+
+  // Cancel rainbow if time is up
+  if (rainbowTime && millis - rainbowTime >= RAINBOW_MS) {
+    rainbowTime = null;
+    console.log("rainbow done!");
+  }
   client.writePixels();
 }
 
@@ -171,6 +183,8 @@ http.createServer(function(req, res) {
       body.when = new Date().getTime();
       blasts.push(body);
       console.log("now blasts:", blasts);
+    } else if (body.type === 'satisfaction') {
+      rainbowTime = new Date().getTime();
     }
   });
   res.write("hi back!");
